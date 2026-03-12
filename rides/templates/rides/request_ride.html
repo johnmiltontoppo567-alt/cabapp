@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request a Ride</title>
+</head>
+<body>
+    <h1>Request a Ride</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Request Ride</button>
+    </form>
+</body>
+</html>
