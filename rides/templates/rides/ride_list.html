@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Rides</title>
+</head>
+<body>
+
+    <h1>Available Rides</h1>
+
+    {% for ride in rides %}
+        <p>{{ ride.pickup }} to {{ ride.drop_location }} - Status: {{ ride.status }}</p>
+    {% empty %}
+        <p>No rides available right now.</p>
+    {% endfor %}
+
+</body>
+</html>

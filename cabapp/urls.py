@@ -16,8 +16,9 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include   # <- add include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("rides/",include("rides.urls")), # <- add this line
 ]
