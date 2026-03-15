@@ -18,6 +18,8 @@
     {% empty %}
         <p>No rides available right now.</p>
     {% endfor %}
+    <p>Welcome,{{ request.user.userprofile.role}}!
+         you are logged in as {{ request.user.userprofile.role }}</p>
 
 </body>
 </html>
