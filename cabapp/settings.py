@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rides",        # Add the rides app to the installed apps
+    "users",        # Add the users app to the installed apps
 ]
 
 MIDDLEWARE = [
@@ -121,3 +122,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Redirect after login/logout
+LOGIN_REDIRECT_URL = 'ride_list'
+LOGOUT_REDIRECT_URL = 'login'

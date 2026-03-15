@@ -5,6 +5,12 @@
 </head>
 <body>
 
+    <!-- Add this logout form -->
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+
     <h1>Available Rides</h1>
 
     {% for ride in rides %}
