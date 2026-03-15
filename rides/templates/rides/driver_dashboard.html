@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Dashboard</title>
+</head>
+<body>
+    <h1>Driver Dashboard</h1>
+    <p>Welcome, {{ request.user.username }}!</p>
+
+    <h2>Pending Rides</h2>
+
+    {% for ride in rides %}
+        <div>
+            <p>{{ ride.pickup }} → {{ ride.drop_location }}</p>
+            <form method="POST" action="{% url 'accept_ride' ride.id %}">
+                {% csrf_token %}
+                <button type="submit">Accept Ride</button>
+            </form>
+        </div>
+        <hr>
+    {% empty %}
+        <p>No pending rides right now.</p>
+    {% endfor %}
+
+    <br>
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+
+</body>
+</html>
