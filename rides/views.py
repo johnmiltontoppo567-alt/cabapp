@@ -32,8 +32,12 @@ def request_ride(request):
 def driver_dashboard(request):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    rides = Ride.objects.filter(status='pending')
-    context = {'rides': rides}
+    pending_rides = Ride.objects.filter(status='pending')
+    accepted_rides = Ride.objects.filter(driver=request.user)
+    context = {
+        'pending_rides': pending_rides,
+        'accepted_rides': accepted_rides
+    }
     return render(request, 'rides/driver_dashboard.html', context)
 
 @login_required

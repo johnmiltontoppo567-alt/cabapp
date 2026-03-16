@@ -7,11 +7,12 @@
     <h1>Driver Dashboard</h1>
     <p>Welcome, {{ request.user.username }}!</p>
 
+    <!-- SECTION 1: Pending Rides -->
     <h2>Pending Rides</h2>
-
-    {% for ride in rides %}
+    {% for ride in pending_rides %}
         <div>
             <p>{{ ride.pickup }} → {{ ride.drop_location }}</p>
+            <p>Passenger: {{ ride.passenger.username }}</p>
             <form method="POST" action="{% url 'accept_ride' ride.id %}">
                 {% csrf_token %}
                 <button type="submit">Accept Ride</button>
@@ -20,6 +21,19 @@
         <hr>
     {% empty %}
         <p>No pending rides right now.</p>
+    {% endfor %}
+
+    <!-- SECTION 2: Accepted Rides History -->
+    <h2>My Accepted Rides</h2>
+    {% for ride in accepted_rides %}
+        <div>
+            <p>{{ ride.pickup }} → {{ ride.drop_location }}</p>
+            <p>Passenger: {{ ride.passenger.username }}</p>
+            <p>Status: {{ ride.status }}</p>
+        </div>
+        <hr>
+    {% empty %}
+        <p>You have not accepted any rides yet.</p>
     {% endfor %}
 
     <br>

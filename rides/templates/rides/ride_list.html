@@ -1,25 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Available Rides</title>
+    <title>My Bookings</title>
 </head>
 <body>
-
-    <!-- Add this logout form -->
     <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit">Logout</button>
     </form>
 
-    <h1>Available Rides</h1>
+    <h1>My Bookings</h1>
+    <p>Welcome, {{ request.user.username }}!</p>
 
     {% for ride in rides %}
-        <p>{{ ride.pickup }} to {{ ride.drop_location }} - Status: {{ ride.status }}</p>
+        <div>
+            <p>{{ ride.pickup }} to {{ ride.drop_location }}</p>
+            <p>Status: {{ ride.status }}</p>
+            {% if ride.driver %}
+                <p>Driver: {{ ride.driver.username }}</p>
+            {% else %}
+                <p>Driver: Not assigned yet</p>
+            {% endif %}
+        </div>
+        <hr>
     {% empty %}
-        <p>No rides available right now.</p>
+        <p>You have no bookings yet.</p>
     {% endfor %}
-    <p>Welcome,{{ request.user.userprofile.role}}!
-         you are logged in as {{ request.user.userprofile.role }}</p>
+
+    <a href="{% url 'request_ride' %}">Request New Ride</a>
 
 </body>
 </html>
