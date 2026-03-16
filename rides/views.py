@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Ride
 from .forms import RideRequestForm
+from django.contrib import messages
 
 @login_required
 def ride_list(request):
@@ -21,7 +22,8 @@ def request_ride(request):
             ride = form.save(commit=False)         # fix 2: ride =
             ride.passenger = request.user
             ride.status = 'pending'
-            ride.save()                            # fix 3: added this
+            ride.save()
+            messages.success(request, "Your ride has been requested successfully!")
             return redirect('ride_list')
     else:
         form = RideRequestForm()
@@ -51,7 +53,8 @@ def accept_ride(request, ride_id):      # ride_id comes from URL
         ride.driver = request.user      # assign this driver
         ride.status = 'confirmed'       # update status
         ride.save()                     # save to database
-    
+    messages.success(request, 
+    "Ride accepted! Contact passenger for pickup.")
     return redirect('driver_dashboard')
 
 
@@ -64,4 +67,15 @@ def complete_ride(request,ride_id):
     if ride.status == 'confirmed' and ride.driver == request.user:
         ride.status = 'completed'
         ride.save()
+        messages.success(request, 
+    "Ride marked as completed!")
     return redirect('driver_dashboard')
+
+@login_required
+def home(request):
+    if request.user.is_authenticated:
+        if request.user.userprofile.role == 'driver':
+            return redirect('driver_dashboard')
+            return redirect('ride_list')
+        return render(request, 'rides/home.html')
+

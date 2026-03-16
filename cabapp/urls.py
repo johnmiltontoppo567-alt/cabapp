@@ -18,8 +18,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include   # <- add include
 from django.contrib.auth import views as auth_views # <- add this line
-
+from rides import views as ride_views # <- add this line
 urlpatterns = [
+    path("",ride_views.home,name="home"), # <- add this line
     path("admin/", admin.site.urls),
     path("rides/",include("rides.urls")), # <- add this line
     path("login/", auth_views.LoginView.as_view(

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold">Welcome to Kokrajhar Cab 🚕</h1>
+    <p class="lead text-muted mt-3">
+        Local cab booking for Kokrajhar city
+    </p>
+    <p class="text-muted">
+       Serving Kokrajhar and surrounding areas.
+    Book a ride in seconds!
+    </p>
+
+    <div class="mt-4">
+        <a href="{% url 'login' %}" 
+           class="btn btn-primary btn-lg me-3">
+            Login
+        </a>
+        <a href="{% url 'register' %}" 
+           class="btn btn-success btn-lg">
+            Register
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterForm
 from .models import UserProfile
+from django.contrib import messages
 
 def register_view(request):
     if request.method == 'POST':
@@ -11,6 +12,8 @@ def register_view(request):
                 user=user,
                 role=request.POST.get('role')
             )
+            messages.success(request, 
+                f"Welcome {user.username}! Please login.")
             return redirect('login')
     else:
         form = RegisterForm()
