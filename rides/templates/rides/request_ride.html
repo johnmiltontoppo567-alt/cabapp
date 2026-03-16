@@ -2,6 +2,13 @@
 {% block title %}Request Ride{% endblock %}
 {% block content %}
     <h1>Request a Ride</h1>
+
+    {% if form.errors %}
+        <div style="color: red;">
+            <p>Please fix the errors below:</p>
+        </div>
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}
