@@ -54,3 +54,14 @@ def accept_ride(request, ride_id):      # ride_id comes from URL
     
     return redirect('driver_dashboard')
 
+
+
+@login_required
+def complete_ride(request,ride_id):
+    if request.user.userprofile.role != 'driver':
+        return redirect('ride_list')
+    ride=get_object_or_404(Ride, id=ride_id)
+    if ride.status == 'confirmed' and ride.driver == request.user:
+        ride.status = 'completed'
+        ride.save()
+    return redirect('driver_dashboard')
