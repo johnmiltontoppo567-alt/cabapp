@@ -1,27 +1,46 @@
 {% extends 'base.html' %}
-
 {% block title %}My Bookings{% endblock %}
 
 {% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
 
-    <h1>My Bookings</h1>
-    <p>Welcome, {{ request.user.username }}!</p>
-
-    {% for ride in rides %}
-        <div>
-            <p>{{ ride.pickup }} to {{ ride.drop_location }}</p>
-            <p>Status: {{ ride.status }}</p>
-            {% if ride.driver %}
-                <p>Driver: {{ ride.driver.username }}</p>
-            {% else %}
-                <p>Driver: Not assigned yet</p>
-            {% endif %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Bookings 🚕</h2>
+            <a href="{% url 'request_ride' %}" 
+               class="btn btn-primary">
+                + Request New Ride
+            </a>
         </div>
-        <hr>
-    {% empty %}
-        <p>You have no bookings yet.</p>
-    {% endfor %}
 
-    <a href="{% url 'request_ride' %}">Request New Ride</a>
+        {% for ride in rides %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ ride.pickup }} → {{ ride.drop_location }}
+                    </h5>
+                    <p>Status:
+                        {% if ride.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% elif ride.status == 'confirmed' %}
+                            <span class="badge bg-primary">Confirmed</span>
+                        {% elif ride.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% endif %}
+                    </p>
+                    {% if ride.driver %}
+                        <p>Driver: {{ ride.driver.username }}</p>
+                    {% else %}
+                        <p class="text-muted">Driver: Not assigned yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                You have no bookings yet.
+            </div>
+        {% endfor %}
 
+    </div>
+</div>
 {% endblock %}

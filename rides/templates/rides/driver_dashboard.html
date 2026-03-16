@@ -1,47 +1,83 @@
-    {% extends 'base.html' %}
-    {% block title %}Driver Dashboard{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Driver Dashboard{% endblock %}
 
-    {% block content %}
-    <h1>Driver Dashboard</h1>
-    <p>Welcome, {{ request.user.username }}!</p>
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
 
-    <!-- SECTION 1: Pending Rides -->
-    <h2>Pending Rides</h2>
-    {% for ride in pending_rides %}
-        <div>
-            <p>{{ ride.pickup }} → {{ ride.drop_location }}</p>
-            <p>Passenger: {{ ride.passenger.username }}</p>
-            <form method="POST" action="{% url 'accept_ride' ride.id %}">
-                {% csrf_token %}
-                <button type="submit">Accept Ride</button>
-            </form>
-        </div>
-        <hr>
-    {% empty %}
-        <p>No pending rides right now.</p>
-    {% endfor %}
+        <h2 class="mb-4">Driver Dashboard 🚗</h2>
 
-    <!-- SECTION 2: Accepted Rides History -->
-    <h2>My Accepted Rides</h2>
-    {% for ride in accepted_rides %}
-        <div>
-            <p>{{ ride.pickup }} → {{ ride.drop_location }}</p>
-            <p>Passenger: {{ ride.passenger.username }}</p>
-            <p>Status: {{ ride.status }}</p>
-            {% if ride.status == 'confirmed' %}
-                <form method="POST" action="{% url 'complete_ride' ride.id %}">
-                    {% csrf_token %}
-                    <button type="submit">Complete Ride</button>
-                </form>
-                {% elif ride.status == 'completed' %}
-                    <p>✅Ride Completed</p>
-            {% endif %}
-        </div>
-        <hr>
-    {% empty %}
-        <p>You have not accepted any rides yet.</p>
-    {% endfor %}
+        <!-- SECTION 1: Pending Rides -->
+        <h4 class="mb-3">🕐 Pending Rides</h4>
+        {% for ride in pending_rides %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ ride.pickup }} → {{ ride.drop_location }}
+                    </h5>
+                    <p class="text-muted">
+                        Passenger: {{ ride.passenger.username }}
+                    </p>
+                    <form method="POST" 
+                          action="{% url 'accept_ride' ride.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-sm" 
+                                type="submit">
+                            Accept Ride
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info mb-4">
+                No pending rides right now.
+            </div>
+        {% endfor %}
 
-    <br>
+        <!-- SECTION 2: Accepted Rides History -->
+        <h4 class="mb-3 mt-4">📋 My Accepted Rides</h4>
+        {% for ride in accepted_rides %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ ride.pickup }} → {{ ride.drop_location }}
+                    </h5>
+                    <p class="text-muted">
+                        Passenger: {{ ride.passenger.username }}
+                    </p>
+                    <p>Status:
+                        {% if ride.status == 'confirmed' %}
+                            <span class="badge bg-primary">
+                                Confirmed
+                            </span>
+                        {% elif ride.status == 'completed' %}
+                            <span class="badge bg-success">
+                                Completed
+                            </span>
+                        {% endif %}
+                    </p>
+                    {% if ride.status == 'confirmed' %}
+                        <form method="POST"
+                              action="{% url 'complete_ride' ride.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-primary btn-sm"
+                                    type="submit">
+                                Complete Ride
+                            </button>
+                        </form>
+                    {% elif ride.status == 'completed' %}
+                        <p class="text-success fw-bold">
+                            ✅ Ride Completed
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                You have not accepted any rides yet.
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
 {% endblock %}
-
