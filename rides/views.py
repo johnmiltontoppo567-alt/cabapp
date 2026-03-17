@@ -71,11 +71,24 @@ def complete_ride(request,ride_id):
     "Ride marked as completed!")
     return redirect('driver_dashboard')
 
+@login_required
+def cancel_ride(request, ride_id):
+    if request.user.userprofile.role != 'passenger':
+        return redirect('driver_dashboard')
+    ride = get_object_or_404(Ride, id=ride_id)
+    if ride.status == 'pending' and ride.passenger == request.user:
+        ride.status = 'cancelled'
+        ride.save()
+        messages.success(request, "Ride cancelled successfully.")
+    else:
+        messages.error(request, 
+            "This ride cannot be cancelled.")
+    return redirect('ride_list')
 
 def home(request):
     if request.user.is_authenticated:
         if request.user.userprofile.role == 'driver':
             return redirect('driver_dashboard')
-            return redirect('ride_list')
+        return redirect('ride_list')
     return render(request, 'rides/home.html')
 

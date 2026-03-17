@@ -7,7 +7,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>My Bookings 🚕</h2>
-            <a href="{% url 'request_ride' %}" 
+            <a href="{% url 'request_ride' %}"
                class="btn btn-primary">
                 + Request New Ride
             </a>
@@ -26,13 +26,30 @@
                             <span class="badge bg-primary">Confirmed</span>
                         {% elif ride.status == 'completed' %}
                             <span class="badge bg-success">Completed</span>
+                        {% elif ride.status == 'cancelled' %}
+                            <span class="badge bg-danger">Cancelled</span>
                         {% endif %}
                     </p>
+
                     {% if ride.driver %}
                         <p>Driver: {{ ride.driver.username }}</p>
                     {% else %}
-                        <p class="text-muted">Driver: Not assigned yet</p>
+                        <p class="text-muted">
+                            Driver: Not assigned yet
+                        </p>
                     {% endif %}
+
+                    {% if ride.status == 'pending' %}
+                        <form method="POST"
+                              action="{% url 'cancel_ride' ride.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-sm mt-2"
+                                    type="submit">
+                                Cancel Ride
+                            </button>
+                        </form>
+                    {% endif %}
+
                 </div>
             </div>
         {% empty %}
