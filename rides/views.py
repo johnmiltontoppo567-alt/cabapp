@@ -71,11 +71,11 @@ def complete_ride(request,ride_id):
     "Ride marked as completed!")
     return redirect('driver_dashboard')
 
-@login_required
+
 def home(request):
     if request.user.is_authenticated:
         if request.user.userprofile.role == 'driver':
             return redirect('driver_dashboard')
             return redirect('ride_list')
-        return render(request, 'rides/home.html')
+    return render(request, 'rides/home.html')
 
