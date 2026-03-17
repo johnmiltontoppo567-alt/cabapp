@@ -15,9 +15,9 @@
 
             <div class="navbar-nav ms-auto">
                 {% if request.user.is_authenticated %}
-                    <span class="navbar-text text-white me-3">
-                        👤 {{ request.user.username }}
-                    </span>
+                  <a class="nav-link text-white" href="{% url 'profile' %}">
+    👤              {{ request.user.username }}
+                   </a>
 
                     {% if request.user.userprofile.role == 'driver' %}
                         <a class="nav-link text-white" 

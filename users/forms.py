@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import UserProfile
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
@@ -28,3 +29,10 @@ class RegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Email already registered.")
         return email
+
+
+# ✅ Separate class — outside RegisterForm
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['phone']

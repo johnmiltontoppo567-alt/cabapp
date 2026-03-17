@@ -43,8 +43,13 @@
                         {{ ride.pickup }} → {{ ride.drop_location }}
                     </h5>
                     <p class="text-muted">
-                        Passenger: {{ ride.passenger.username }}
-                    </p>
+                     Passenger: {{ ride.passenger.username }}
+                     {% if ride.passenger.userprofile.phone %}
+                    📞 {{ ride.passenger.userprofile.phone }}
+                     {% else %}
+               <span class="text-muted">(no phone added)</span>
+            {% endif %}
+            </p>
                     <p>Status:
                         {% if ride.status == 'confirmed' %}
                             <span class="badge bg-primary">
