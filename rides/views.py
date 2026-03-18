@@ -68,46 +68,49 @@ def driver_dashboard(request):
     return render(request, 'rides/driver_dashboard.html', context)
 
 @login_required
-def accept_ride(request, ride_id):      # ride_id comes from URL
+def accept_ride(request, ride_id):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    
-    ride = get_object_or_404(Ride, id=ride_id)
-    
-    if ride.status == 'pending':        # only accept pending rides
-        ride.driver = request.user      # assign this driver
-        ride.status = 'confirmed'       # update status
-        ride.save()                     # save to database
-    messages.success(request, 
-    "Ride accepted! Contact passenger for pickup.")
+    if request.method == 'POST':      # ← add this check
+        ride = get_object_or_404(Ride, id=ride_id)
+        if ride.status == 'pending':
+            ride.driver = request.user
+            ride.status = 'confirmed'
+            ride.save()
+            messages.success(request,
+                "Ride accepted! Contact passenger for pickup.")
     return redirect('driver_dashboard')
 
 
-
+# complete_ride — missing POST check
 @login_required
-def complete_ride(request,ride_id):
+def complete_ride(request, ride_id):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    ride=get_object_or_404(Ride, id=ride_id)
-    if ride.status == 'confirmed' and ride.driver == request.user:
-        ride.status = 'completed'
-        ride.save()
-        messages.success(request, 
-    "Ride marked as completed!")
+    if request.method == 'POST':                    # ← add this
+        ride = get_object_or_404(Ride, id=ride_id)
+        if ride.status == 'confirmed' and ride.driver == request.user:
+            ride.status = 'completed'
+            ride.save()
+            messages.success(request,
+                "Ride marked as completed!")
     return redirect('driver_dashboard')
 
+# cancel_ride — missing POST check
 @login_required
 def cancel_ride(request, ride_id):
     if request.user.userprofile.role != 'passenger':
         return redirect('driver_dashboard')
-    ride = get_object_or_404(Ride, id=ride_id)
-    if ride.status == 'pending' and ride.passenger == request.user:
-        ride.status = 'cancelled'
-        ride.save()
-        messages.success(request, "Ride cancelled successfully.")
-    else:
-        messages.error(request, 
-            "This ride cannot be cancelled.")
+    if request.method == 'POST':                    # ← add this
+        ride = get_object_or_404(Ride, id=ride_id)
+        if ride.status == 'pending' and ride.passenger == request.user:
+            ride.status = 'cancelled'
+            ride.save()
+            messages.success(request,
+                "Ride cancelled successfully.")
+        else:
+            messages.error(request,
+                "This ride cannot be cancelled.")
     return redirect('ride_list')
 
 def home(request):

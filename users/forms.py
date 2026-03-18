@@ -36,3 +36,20 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ['phone']
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            # remove spaces from phone number
+            phone = phone.replace(' ', '')
+            # check if all digits
+            if not phone.isdigit():
+                raise forms.ValidationError(
+                    "Phone number must contain only digits."
+                )
+            # check length
+            if len(phone) < 10 or len(phone) > 15:
+                raise forms.ValidationError(
+                    "Phone number must be between 10 and 15 digits."
+                )
+        return phone
