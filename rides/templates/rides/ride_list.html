@@ -12,7 +12,29 @@
                 + Request New Ride
             </a>
         </div>
-
+        <!-- Filter Buttons -->
+<div class="mb-4">
+    <a href="{% url 'ride_list' %}" 
+       class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        All
+    </a>
+    <a href="{% url 'ride_list' %}?status=pending"
+       class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+        Pending
+    </a>
+    <a href="{% url 'ride_list' %}?status=confirmed"
+       class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Confirmed
+    </a>
+    <a href="{% url 'ride_list' %}?status=completed"
+       class="btn btn-sm {% if status_filter == 'completed' %}btn-success{% else %}btn-outline-success{% endif %}">
+        Completed
+    </a>
+    <a href="{% url 'ride_list' %}?status=cancelled"
+       class="btn btn-sm {% if status_filter == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        Cancelled
+    </a>
+</div>
         {% for ride in rides %}
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">

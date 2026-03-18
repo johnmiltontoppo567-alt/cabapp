@@ -33,7 +33,21 @@
                 No pending rides right now.
             </div>
         {% endfor %}
-
+<!-- Filter for accepted rides -->
+<div class="mb-3">
+    <a href="{% url 'driver_dashboard' %}"
+       class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        All
+    </a>
+    <a href="{% url 'driver_dashboard' %}?status=confirmed"
+       class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Confirmed
+    </a>
+    <a href="{% url 'driver_dashboard' %}?status=completed"
+       class="btn btn-sm {% if status_filter == 'completed' %}btn-success{% else %}btn-outline-success{% endif %}">
+        Completed
+    </a>
+</div>
         <!-- SECTION 2: Accepted Rides History -->
         <h4 class="mb-3 mt-4">📋 My Accepted Rides</h4>
         {% for ride in accepted_rides %}

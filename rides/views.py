@@ -8,8 +8,21 @@ from django.contrib import messages
 def ride_list(request):
     if request.user.userprofile.role != 'passenger':
         return redirect('driver_dashboard')
-    rides = Ride.objects.filter(passenger=request.user)
-    context = {'rides': rides}
+    # get status filter from URL query parameters
+    status_filter = request.GET.get('status')
+    # fetch rides based on filter
+    if status_filter:
+        rides= Ride.objects.filter(
+            passenger=request.user,
+            status=status_filter
+        )
+    else:
+        rides = Ride.objects.filter(passenger=request.user)
+    
+    context = {
+        'rides': rides,
+        'status_filter': status_filter #pass to template
+        }
     return render(request, 'rides/ride_list.html', context)
 
 @login_required
@@ -34,11 +47,23 @@ def request_ride(request):
 def driver_dashboard(request):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
+    
     pending_rides = Ride.objects.filter(status='pending')
-    accepted_rides = Ride.objects.filter(driver=request.user)
+    
+    # add filter for accepted rides
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        accepted_rides = Ride.objects.filter(
+            driver=request.user,
+            status=status_filter
+        )
+    else:
+        accepted_rides = Ride.objects.filter(driver=request.user)
+    
     context = {
         'pending_rides': pending_rides,
-        'accepted_rides': accepted_rides
+        'accepted_rides': accepted_rides,
+        'status_filter': status_filter
     }
     return render(request, 'rides/driver_dashboard.html', context)
 
