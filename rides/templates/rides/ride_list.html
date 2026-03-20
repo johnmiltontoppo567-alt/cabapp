@@ -87,3 +87,28 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    // Listen for updates on all currently visible rides
+    {% for ride in rides %}
+        {% if ride.status == 'pending' or ride.status == 'confirmed' %}
+            (function() {
+                const rideId = "{{ ride.id }}";
+                const rSocket = new WebSocket(
+                    (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
+                    window.location.host + '/ws/rides/' + rideId + '/'
+                );
+
+                rSocket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'ride_update') {
+                        // Reload to show the updated status/driver
+                        window.location.reload();
+                    }
+                };
+            })();
+        {% endif %}
+    {% endfor %}
+</script>
+{% endblock %}

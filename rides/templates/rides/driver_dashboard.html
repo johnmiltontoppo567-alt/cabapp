@@ -107,3 +107,24 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = new WebSocket(
+        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
+        window.location.host + '/ws/drivers/'
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'ride_available') {
+            // Simply reload to show the new ride
+            window.location.reload();
+        }
+    };
+
+    socket.onclose = function(e) {
+        console.error('Ride socket closed unexpectedly');
+    };
+</script>
+{% endblock %}

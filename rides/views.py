@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Ride
 from .forms import RideRequestForm
 from django.contrib import messages
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 @login_required
 def ride_list(request):
@@ -34,6 +36,20 @@ def request_ride(request):
             ride.passenger = request.user
             ride.status = 'pending'
             ride.save()
+            
+            # Notify drivers of new ride
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'drivers',
+                {
+                    'type': 'ride_available',
+                    'ride_id': ride.id,
+                    'passenger': ride.passenger.username,
+                    'pickup': ride.pickup_location,
+                    'dropoff': ride.dropoff_location
+                }
+            )
+
             messages.success(request,
                 "Your ride has been requested successfully!")
             return redirect('ride_list')
@@ -75,6 +91,18 @@ def accept_ride(request, ride_id):
             ride.driver = request.user
             ride.status = 'confirmed'
             ride.save()
+
+            # Notify passenger of status change
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'ride_{ride.id}',
+                {
+                    'type': 'ride_update',
+                    'status': ride.status,
+                    'driver': ride.driver.username
+                }
+            )
+
             messages.success(request,
                 "Ride accepted! Contact passenger for pickup.")
     return redirect('driver_dashboard')
@@ -88,6 +116,17 @@ def complete_ride(request, ride_id):
         if ride.status == 'confirmed' and ride.driver == request.user:
             ride.status = 'completed'
             ride.save()
+
+            # Notify passenger of completion
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'ride_{ride.id}',
+                {
+                    'type': 'ride_update',
+                    'status': ride.status
+                }
+            )
+
             messages.success(request,
                 "Ride marked as completed!")
     return redirect('driver_dashboard')
