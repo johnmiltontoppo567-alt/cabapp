@@ -45,8 +45,8 @@ def request_ride(request):
                     'type': 'ride_available',
                     'ride_id': ride.id,
                     'passenger': ride.passenger.username,
-                    'pickup': ride.pickup_location,
-                    'dropoff': ride.dropoff_location
+                    'pickup': ride.pickup,
+                    'dropoff': ride.drop_location
                 }
             )
 
