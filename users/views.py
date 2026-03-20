@@ -11,7 +11,8 @@ def register_view(request):
             user = form.save()
             UserProfile.objects.create(
                 user=user,
-                role=request.POST.get('role')
+                role=form.cleaned_data.get('role'),
+                phone=form.cleaned_data.get('phone')
             )
             messages.success(request,
                 f"Welcome {user.username}! Please login.")

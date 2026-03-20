@@ -41,6 +41,10 @@
                     <h5 class="card-title">
                         {{ ride.pickup }} → {{ ride.drop_location }}
                     </h5>
+                     <!-- timestamp here — shows for ALL rides ✅ -->
+                <p class="text-muted small">
+                    Requested: {{ ride.created_at|date:"d M Y, h:i A" }}
+                 </p>
                     <p>Status:
                         {% if ride.status == 'pending' %}
                             <span class="badge bg-warning">Pending</span>

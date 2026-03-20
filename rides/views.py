@@ -8,21 +8,19 @@ from django.contrib import messages
 def ride_list(request):
     if request.user.userprofile.role != 'passenger':
         return redirect('driver_dashboard')
-    # get status filter from URL query parameters
-    status_filter = request.GET.get('status')
-    # fetch rides based on filter
+    status_filter = request.GET.get('status', '')
     if status_filter:
-        rides= Ride.objects.filter(
-            passenger=request.user,
-            status=status_filter
-        )
+        rides = Ride.objects.select_related(
+            'passenger', 'driver'
+        ).filter(passenger=request.user, status=status_filter)
     else:
-        rides = Ride.objects.filter(passenger=request.user)
-    
+        rides = Ride.objects.select_related(
+            'passenger', 'driver'
+        ).filter(passenger=request.user)
     context = {
         'rides': rides,
-        'status_filter': status_filter #pass to template
-        }
+        'status_filter': status_filter
+    }
     return render(request, 'rides/ride_list.html', context)
 
 @login_required
@@ -30,13 +28,14 @@ def request_ride(request):
     if request.user.userprofile.role != 'passenger':
         return redirect('driver_dashboard')
     if request.method == 'POST':
-        form = RideRequestForm(request.POST)      # fix 1: single =
+        form = RideRequestForm(request.POST)
         if form.is_valid():
-            ride = form.save(commit=False)         # fix 2: ride =
+            ride = form.save(commit=False)
             ride.passenger = request.user
             ride.status = 'pending'
             ride.save()
-            messages.success(request, "Your ride has been requested successfully!")
+            messages.success(request,
+                "Your ride has been requested successfully!")
             return redirect('ride_list')
     else:
         form = RideRequestForm()
@@ -47,19 +46,18 @@ def request_ride(request):
 def driver_dashboard(request):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    
-    pending_rides = Ride.objects.filter(status='pending')
-    
-    # add filter for accepted rides
+    pending_rides = Ride.objects.select_related(
+        'passenger'
+    ).filter(status='pending')
     status_filter = request.GET.get('status', '')
     if status_filter:
-        accepted_rides = Ride.objects.filter(
-            driver=request.user,
-            status=status_filter
-        )
+        accepted_rides = Ride.objects.select_related(
+            'passenger'
+        ).filter(driver=request.user, status=status_filter)
     else:
-        accepted_rides = Ride.objects.filter(driver=request.user)
-    
+        accepted_rides = Ride.objects.select_related(
+            'passenger'
+        ).filter(driver=request.user)
     context = {
         'pending_rides': pending_rides,
         'accepted_rides': accepted_rides,
@@ -71,7 +69,7 @@ def driver_dashboard(request):
 def accept_ride(request, ride_id):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    if request.method == 'POST':      # ← add this check
+    if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'pending':
             ride.driver = request.user
@@ -81,13 +79,11 @@ def accept_ride(request, ride_id):
                 "Ride accepted! Contact passenger for pickup.")
     return redirect('driver_dashboard')
 
-
-# complete_ride — missing POST check
 @login_required
 def complete_ride(request, ride_id):
     if request.user.userprofile.role != 'driver':
         return redirect('ride_list')
-    if request.method == 'POST':                    # ← add this
+    if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'confirmed' and ride.driver == request.user:
             ride.status = 'completed'
@@ -96,12 +92,11 @@ def complete_ride(request, ride_id):
                 "Ride marked as completed!")
     return redirect('driver_dashboard')
 
-# cancel_ride — missing POST check
 @login_required
 def cancel_ride(request, ride_id):
     if request.user.userprofile.role != 'passenger':
         return redirect('driver_dashboard')
-    if request.method == 'POST':                    # ← add this
+    if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'pending' and ride.passenger == request.user:
             ride.status = 'cancelled'
@@ -119,4 +114,3 @@ def home(request):
             return redirect('driver_dashboard')
         return redirect('ride_list')
     return render(request, 'rides/home.html')
-
