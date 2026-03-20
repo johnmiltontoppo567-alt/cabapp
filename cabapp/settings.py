@@ -26,6 +26,8 @@ ALLOWED_HOSTS = ['*']
 render_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if render_hostname:
     ALLOWED_HOSTS.append(render_hostname)
+    # Trust the Render origin for CSRF
+    CSRF_TRUSTED_ORIGINS = [f'https://{render_hostname}']
 
 
 # Application definition
