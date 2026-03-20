@@ -8,4 +8,5 @@ urlpatterns = [
     path('accept/<int:ride_id>/', views.accept_ride, name='accept_ride'),
     path('complete/<int:ride_id>/', views.complete_ride,name='complete_ride'),
     path('cancel/<int:ride_id>/', views.cancel_ride, name='cancel_ride'),
+    path('status/<int:ride_id>/', views.ride_status, name='ride_status'),
 ]

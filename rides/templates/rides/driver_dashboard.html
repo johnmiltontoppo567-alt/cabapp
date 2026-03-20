@@ -1,109 +1,183 @@
 {% extends 'base.html' %}
-{% block title %}Driver Dashboard{% endblock %}
+{% load static %}
+
+{% block title %}Driver Command Center - Kokrajhar Cab{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        max-width: 800px;
+        margin: 0 auto;
+        padding-bottom: 100px;
+    }
+    .feed-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 0 16px;
+    }
+    .job-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .job-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px var(--elevated); }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+        padding: 16px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 12px;
+    }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 1.125rem; font-weight: 800; color: var(--primary); display: block; }
+    .stat-label { font-size: 0.625rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+
+    .route-visual {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .line { flex: 1; height: 1px; border-bottom: 1px dashed var(--border); }
+
+    .accept-btn-production {
+        width: 100%;
+        padding: 20px;
+        font-size: 1.25rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(251, 211, 4, 0.2);
+    }
+
+    .filter-pills {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+        padding: 4px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
+<div class="container mt-4">
+    <div class="dashboard-grid">
+        <header class="feed-header">
+            <div>
+                <h1 class="title-lg" style="margin: 0;">Job Feed</h1>
+                <p class="text-label" style="font-size: 0.75rem;">Real-time opportunities nearby</p>
+            </div>
+            <div style="text-align: right;">
+                <span class="badge badge-confirmed" style="background: rgba(34, 197, 94, 0.1); color: var(--success);">Online</span>
+            </div>
+        </header>
 
-        <h2 class="mb-4">Driver Dashboard 🚗</h2>
-
-        <!-- SECTION 1: Pending Rides -->
-        <h4 class="mb-3">🕐 Pending Rides</h4>
-        
-        {% for ride in pending_rides %}
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{ ride.pickup }} → {{ ride.drop_location }}
-                    </h5>
-                     <p class="text-muted small">
-                        Requested: {{ ride.created_at|date:"d M Y, h:i A" }}
-                        </p>
-                    <p class="text-muted">
-                        Passenger: {{ ride.passenger.username }}
-                    </p>
-                    <form method="POST" 
-                          action="{% url 'accept_ride' ride.id %}">
-                        {% csrf_token %}
-                        <button class="btn btn-success btn-sm" 
-                                type="submit">
-                            Accept Ride
-                        </button>
-                    </form>
+        <!-- Available Jobs Section -->
+        <section>
+            <div class="filter-pills">
+                <span class="text-label" style="align-self: center; margin-right: 8px;">Available</span>
+            </div>
+            
+            {% for ride in pending_rides %}
+            <div class="card job-card mb-8" style="background: linear-gradient(145deg, #1E293B, #0F172A); border: 1px solid rgba(251, 211, 4, 0.1);">
+                <div class="flex-between">
+                    <span class="text-label" style="font-size: 0.65rem;">ID: #{{ ride.id }} • {{ ride.created_at|timesince }} ago</span>
+                    <span style="font-size: 1.125rem; font-weight: 800; color: var(--primary);">₹{{ ride.estimated_fare }}</span>
                 </div>
-            </div>
-        {% empty %}
-            <div class="alert alert-info mb-4">
-                No pending rides right now.
-            </div>
-        {% endfor %}
-<!-- Filter for accepted rides -->
-<div class="mb-3">
-    <a href="{% url 'driver_dashboard' %}"
-       class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
-        All
-    </a>
-    <a href="{% url 'driver_dashboard' %}?status=confirmed"
-       class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-        Confirmed
-    </a>
-    <a href="{% url 'driver_dashboard' %}?status=completed"
-       class="btn btn-sm {% if status_filter == 'completed' %}btn-success{% else %}btn-outline-success{% endif %}">
-        Completed
-    </a>
-</div>
-        <!-- SECTION 2: Accepted Rides History -->
-        <h4 class="mb-3 mt-4">📋 My Accepted Rides</h4>
-        {% for ride in accepted_rides %}
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{ ride.pickup }} → {{ ride.drop_location }}
-                    </h5>
-                    <p class="text-muted small">
-                      Requested: {{ ride.created_at|date:"d M Y, h:i A" }}
-                     </p>
-                    <p class="text-muted">
-                     Passenger: {{ ride.passenger.username }}
-                     {% if ride.passenger.userprofile.phone %}
-                    📞 {{ ride.passenger.userprofile.phone }}
-                     {% else %}
-               <span class="text-muted">(no phone added)</span>
-            {% endif %}
-            </p>
-                    <p>Status:
-                        {% if ride.status == 'confirmed' %}
-                            <span class="badge bg-primary">
-                                Confirmed
-                            </span>
-                        {% elif ride.status == 'completed' %}
-                            <span class="badge bg-success">
-                                Completed
-                            </span>
-                        {% endif %}
-                    </p>
-                    {% if ride.status == 'confirmed' %}
-                        <form method="POST"
-                              action="{% url 'complete_ride' ride.id %}">
-                            {% csrf_token %}
-                            <button class="btn btn-primary btn-sm"
-                                    type="submit">
-                                Complete Ride
-                            </button>
-                        </form>
-                    {% elif ride.status == 'completed' %}
-                        <p class="text-success fw-bold">
-                            ✅ Ride Completed
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-        {% empty %}
-            <div class="alert alert-info">
-                You have not accepted any rides yet.
-            </div>
-        {% endfor %}
 
+                <div class="route-visual mt-4">
+                    <div class="dot" style="background: var(--primary);"></div>
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.9375rem; font-weight: 600; display: block;">{{ ride.pickup }}</span>
+                    </div>
+                </div>
+                <div class="route-visual" style="margin-bottom: 0;">
+                    <div class="dot" style="background: var(--text-muted);"></div>
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.9375rem; font-weight: 600; display: block;">{{ ride.drop_location }}</span>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-value">₹{{ ride.estimated_fare }}</span>
+                        <span class="stat-label">Earnings</span>
+                    </div>
+                    <div class="stat-item" style="border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
+                        <span class="stat-value">{{ ride.pickup_distance }}km</span>
+                        <span class="stat-label">To Pickup</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ ride.travel_distance }}km</span>
+                        <span class="stat-label">Total Trip</span>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'accept_ride' ride.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary accept-btn-production">
+                        Accept Job
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <div class="card" style="text-align: center; border-style: dashed; background: transparent; opacity: 0.5;">
+                <p>Waiting for new requests... 📡</p>
+                <div class="shimmer" style="height: 2px; width: 60px; margin: 12px auto; border-radius: 2px;"></div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- Active/History Section -->
+        <section class="mt-4">
+            <h2 class="title-lg mb-8">My Active Rides</h2>
+            
+            <div class="filter-pills">
+                <a href="{% url 'driver_dashboard' %}" class="btn {% if not status_filter %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">All</a>
+                <a href="{% url 'driver_dashboard' %}?status=confirmed" class="btn {% if status_filter == 'confirmed' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">Active</a>
+                <a href="{% url 'driver_dashboard' %}?status=completed" class="btn {% if status_filter == 'completed' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">History</a>
+            </div>
+
+            {% for ride in accepted_rides %}
+            <div class="card mb-4" style="padding: 20px;">
+                <div class="flex-between mb-8">
+                    <span class="badge {% if ride.status == 'confirmed' %}badge-confirmed{% else %}badge-pending{% endif %}">
+                        {{ ride.status }}
+                    </span>
+                    <span style="font-weight: 700;">₹{{ ride.estimated_fare }}</span>
+                </div>
+                
+                <p style="font-weight: 600; margin-bottom: 4px;">{{ ride.passenger.username }}</p>
+                <p class="text-label" style="font-size: 0.75rem; margin-bottom: 16px;">
+                    {% if ride.passenger.userprofile.phone %}📞 {{ ride.passenger.userprofile.phone }}{% else %}No phone added{% endif %}
+                </p>
+
+                {% if ride.status == 'confirmed' %}
+                <form method="POST" action="{% url 'complete_ride' ride.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary);">
+                        Mark as Completed
+                    </button>
+                </form>
+                {% else %}
+                <div class="flex-between">
+                    <span class="text-label">Completed on {{ ride.updated_at|date:"d M, h:i A" }}</span>
+                    <span style="color: var(--success);">✓</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </section>
     </div>
 </div>
 {% endblock %}
@@ -118,13 +192,10 @@
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'ride_available') {
-            // Simply reload to show the new ride
+            // Toast or reload
+            console.log("New ride available!");
             window.location.reload();
         }
-    };
-
-    socket.onclose = function(e) {
-        console.error('Ride socket closed unexpectedly');
     };
 </script>
 {% endblock %}

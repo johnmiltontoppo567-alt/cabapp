@@ -31,5 +31,8 @@ class Ride(models.Model):
         null=True,
         blank=True
     )
+    estimated_fare = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    pickup_distance = models.FloatField(default=0.0)  # in km
+    travel_distance = models.FloatField(default=0.0)  # in km
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

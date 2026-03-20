@@ -1,26 +1,96 @@
 {% extends 'base.html' %}
-{% block title %}Home{% endblock %}
+{% load static %}
+
+{% block title %}Kokrajhar's Premium Cab Service{% endblock %}
 
 {% block content %}
-<div class="text-center mt-5">
-    <h1 class="display-4 fw-bold">Welcome to Kokrajhar Cab 🚕</h1>
-    <p class="lead text-muted mt-3">
-        Local cab booking for Kokrajhar city
-    </p>
-    <p class="text-muted">
-       Serving Kokrajhar and surrounding areas.
-    Book a ride in seconds!
-    </p>
+<!-- Cinematic Map Background -->
+<div id="hero-map" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
 
-    <div class="mt-4">
-        <a href="{% url 'login' %}" 
-           class="btn btn-primary btn-lg me-3">
-            Login
-        </a>
-        <a href="{% url 'register' %}" 
-           class="btn btn-success btn-lg">
-            Register
-        </a>
+<!-- Hero Overlay -->
+<div class="hero-content" style="padding-top: 15vh; display: flex; flex-direction: column; align-items: center; text-align: center; color: white;">
+    <div class="card" style="background: rgba(18, 18, 18, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); max-width: 600px; padding: 48px; animation: fadeInUp 0.8s ease-out;">
+        <span class="text-label" style="color: var(--primary); margin-bottom: 16px; display: block;">Reliable • Safe • Fast</span>
+        <h1 class="title-xl" style="margin-bottom: 24px;">Your Ride, <br><span style="color: var(--primary);">Just a Tap Away.</span></h1>
+        <p style="color: var(--text-muted); font-size: 1.125rem; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto;">
+            Experience Kokrajhar's most trusted cab booking platform. Premium vehicles, professional drivers.
+        </p>
+        
+        <div style="display: flex; gap: 16px; justify-content: center;">
+            <a href="{% url 'register' %}" class="btn btn-primary" style="padding: 16px 32px; font-size: 1.125rem;">Create Account</a>
+            <a href="{% url 'login' %}" class="btn btn-secondary" style="padding: 16px 32px; font-size: 1.125rem;">Login</a>
+        </div>
+    </div>
+
+    <!-- Trust Markers -->
+    <div style="margin-top: 48px; display: flex; gap: 48px; opacity: 0.8; animation: fadeIn 1.2s ease-out;">
+        <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">500+</div>
+            <div class="text-label" style="font-size: 0.75rem;">Daily Rides</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">4.9/5</div>
+            <div class="text-label" style="font-size: 0.75rem;">User Rating</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">15min</div>
+            <div class="text-label" style="font-size: 0.75rem;">Avg. Pickup</div>
+        </div>
     </div>
 </div>
+
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Dark Mode Map Tiles */
+    .leaflet-container {
+        background: #121212 !important;
+    }
+    .leaflet-tile {
+        filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) blur(1px);
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Cinematic Map
+    const map = L.map('hero-map', {
+        center: [26.4011, 90.2667], // Kokrajhar coordinates
+        zoom: 14,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Add some "Ghost" pins for effect
+    const spots = [
+        [26.4011, 90.2667],
+        [26.4050, 90.2700],
+        [26.3980, 90.2620],
+        [26.4100, 90.2800]
+    ];
+
+    const taxiIcon = L.divIcon({
+        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 8px var(--primary));">🚕</div>',
+        className: 'taxi-marker',
+        iconSize: [30, 30]
+    });
+
+    spots.forEach(spot => {
+        L.marker(spot, {icon: taxiIcon}).addTo(map);
+    });
+</script>
 {% endblock %}

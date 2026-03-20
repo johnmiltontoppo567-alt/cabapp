@@ -1,34 +1,176 @@
 {% extends 'base.html' %}
-{% block title %}Request Ride{% endblock %}
+{% load static %}
+
+{% block title %}Book Your Kokrajhar Cab{% endblock %}
+
+{% block extra_head %}
+<style>
+    .booking-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 80px);
+        position: relative;
+    }
+    #booking-map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    .booking-card-wrapper {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 440px;
+        margin: 24px;
+        animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .form-group { margin-bottom: 20px; }
+    .form-input {
+        width: 100%;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: white;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(251, 211, 4, 0.1);
+    }
+    .detect-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--secondary);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .booking-card-wrapper { margin: 16px; width: calc(100% - 32px); max-width: none; position: fixed; bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+        .booking-container { height: calc(100vh - 60px); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body p-4">
-                <h3 class="card-title text-center mb-4">
-                    🚕 Request a Kokrajhar Cab
-                </h3>
+<div class="booking-container">
+    <div id="booking-map"></div>
 
-                {% if form.errors %}
-                    <div class="alert alert-danger">
-                        Please fix the errors below.
+    <div class="booking-card-wrapper">
+        <div class="card" style="background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+            <header style="margin-bottom: 32px;">
+                <h1 class="title-lg" style="margin-bottom: 8px;">Where to?</h1>
+                <p class="text-label" style="font-size: 0.75rem;">Premium local cabs at your doorstep</p>
+            </header>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group" style="position: relative;">
+                    <label class="text-label" style="margin-bottom: 8px; display: block;">Pickup Location</label>
+                    <input type="text" name="pickup" id="id_pickup" class="form-input" placeholder="Enter pickup address" required value="{{ form.pickup.value|default:'' }}">
+                    <button type="button" class="detect-btn" id="detect-location">
+                        📍 Detect
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="text-label" style="margin-bottom: 8px; display: block;">Drop-off Location</label>
+                    <input type="text" name="drop_location" id="id_drop_location" class="form-input" placeholder="Where are you going?" required value="{{ form.drop_location.value|default:'' }}">
+                </div>
+
+                <div style="margin-top: 32px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 1.125rem;">
+                        Request Kokrajhar Cab
+                    </button>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <span style="color: var(--text-muted); font-size: 0.8125rem;">Est. Pickup: <b>5 - 10 mins</b></span>
                     </div>
-                {% endif %}
-
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="d-grid mt-3">
-                        <button class="btn btn-success" 
-                                type="submit">
-                            Request Ride
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Map
+    const map = L.map('booking-map', {
+        center: [26.4011, 90.2667],
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Dark Mode Map
+    document.querySelector('.leaflet-tile-container').style.filter = 'invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.2) grayscale(1)';
+
+    // Geolocation API
+    const detectBtn = document.getElementById('detect-location');
+    const pickupInput = document.getElementById('id_pickup');
+
+    detectBtn.addEventListener('click', () => {
+        detectBtn.innerHTML = '⌛ Searching...';
+        detectBtn.disabled = true;
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // Update map
+                map.setView([lat, lng], 16);
+                L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        html: '<div style="font-size: 32px; filter: drop-shadow(0 0 10px var(--primary));">📍</div>',
+                        className: 'user-marker'
+                    })
+                }).addTo(map);
+
+                pickupInput.value = `Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                detectBtn.innerHTML = '✅ Located';
+                detectBtn.style.background = 'var(--success)';
+                
+                setTimeout(() => {
+                    detectBtn.innerHTML = '📍 Detect';
+                    detectBtn.style.background = 'var(--secondary)';
+                    detectBtn.disabled = false;
+                }, 3000);
+
+            }, (error) => {
+                alert("Could not get your location. Please enter it manually.");
+                detectBtn.innerHTML = '📍 Detect';
+                detectBtn.disabled = false;
+            });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+            detectBtn.disabled = false;
+        }
+    });
+
+    // Animate map moves on input focus
+    pickupInput.addEventListener('focus', () => map.panBy([0, -100], {animate: true}));
+</script>
 {% endblock %}

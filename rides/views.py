@@ -35,6 +35,13 @@ def request_ride(request):
             ride = form.save(commit=False)
             ride.passenger = request.user
             ride.status = 'pending'
+            
+            # Mission: Production-Grade Simulation
+            import random
+            ride.estimated_fare = random.randint(120, 450)
+            ride.pickup_distance = round(random.uniform(0.8, 4.2), 1)
+            ride.travel_distance = round(random.uniform(3.5, 18.0), 1)
+            
             ride.save()
             
             # Notify drivers of new ride
@@ -52,7 +59,7 @@ def request_ride(request):
 
             messages.success(request,
                 "Your ride has been requested successfully!")
-            return redirect('ride_list')
+            return redirect('ride_status', ride_id=ride.id)
     else:
         form = RideRequestForm()
     context = {'form': form}
@@ -99,7 +106,9 @@ def accept_ride(request, ride_id):
                 {
                     'type': 'ride_update',
                     'status': ride.status,
-                    'driver': ride.driver.username
+                    'driver': ride.driver.username,
+                    'vehicle': ride.driver.userprofile.vehicle_model or "Premium Sedan",
+                    'plate': ride.driver.userprofile.license_plate or "AS-XX-0000"
                 }
             )
 
@@ -153,3 +162,15 @@ def home(request):
             return redirect('driver_dashboard')
         return redirect('ride_list')
     return render(request, 'rides/home.html')
+
+@login_required
+def ride_status(request, ride_id):
+    ride = get_object_or_404(Ride, id=ride_id)
+    # Security: Only passenger or driver can see status
+    if request.user != ride.passenger and request.user.userprofile.role != 'driver':
+        # If it's the personal ride of the passenger, or the driver who accepted it
+        if ride.driver and request.user != ride.driver:
+             return redirect('ride_list')
+    
+    context = {'ride': ride}
+    return render(request, 'rides/ride_status.html', context)

@@ -1,89 +1,70 @@
 {% extends 'base.html' %}
-{% block title %}My Bookings{% endblock %}
+{% load static %}
+
+{% block title %}My Activity - Kokrajhar Cab{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>My Bookings 🚕</h2>
-            <a href="{% url 'request_ride' %}"
-               class="btn btn-primary">
-                + Request New Ride
-            </a>
+<div class="container mt-4" style="max-width: 700px;">
+    <header class="mb-8" style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 class="title-lg" style="margin: 0;">My Rides</h1>
+            <p class="text-label" style="font-size: 0.75rem;">Your journey history & active trips</p>
         </div>
-        <!-- Filter Buttons -->
-<div class="mb-4">
-    <a href="{% url 'ride_list' %}" 
-       class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">
-        All
-    </a>
-    <a href="{% url 'ride_list' %}?status=pending"
-       class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
-        Pending
-    </a>
-    <a href="{% url 'ride_list' %}?status=confirmed"
-       class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-        Confirmed
-    </a>
-    <a href="{% url 'ride_list' %}?status=completed"
-       class="btn btn-sm {% if status_filter == 'completed' %}btn-success{% else %}btn-outline-success{% endif %}">
-        Completed
-    </a>
-    <a href="{% url 'ride_list' %}?status=cancelled"
-       class="btn btn-sm {% if status_filter == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-        Cancelled
-    </a>
-</div>
+        <a href="{% url 'request_ride' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.875rem;">+ New Request</a>
+    </header>
+
+    <!-- Filters -->
+    <div style="display: flex; gap: 8px; margin-bottom: 32px; overflow-x: auto; padding-bottom: 8px;">
+        <a href="{% url 'ride_list' %}" class="btn {% if not status_filter %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem; border: 1px solid var(--border);">All</a>
+        <a href="{% url 'ride_list' %}?status=pending" class="btn {% if status_filter == 'pending' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem; border: 1px solid var(--border);">Pending</a>
+        <a href="{% url 'ride_list' %}?status=confirmed" class="btn {% if status_filter == 'confirmed' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem; border: 1px solid var(--border);">Active</a>
+    </div>
+
+    <div class="v-stack">
         {% for ride in rides %}
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{ ride.pickup }} → {{ ride.drop_location }}
-                    </h5>
-                     <!-- timestamp here — shows for ALL rides ✅ -->
-                <p class="text-muted small">
-                    Requested: {{ ride.created_at|date:"d M Y, h:i A" }}
-                 </p>
-                    <p>Status:
-                        {% if ride.status == 'pending' %}
-                            <span class="badge bg-warning">Pending</span>
-                        {% elif ride.status == 'confirmed' %}
-                            <span class="badge bg-primary">Confirmed</span>
-                        {% elif ride.status == 'completed' %}
-                            <span class="badge bg-success">Completed</span>
-                        {% elif ride.status == 'cancelled' %}
-                            <span class="badge bg-danger">Cancelled</span>
+            <div class="card" style="padding: 24px; position: relative; transition: transform 0.2s;">
+                <div class="flex-between mb-4">
+                    <span class="badge {% if ride.status == 'pending' %}badge-pending{% elif ride.status == 'confirmed' %}badge-confirmed{% elif ride.status == 'completed' %}badge-confirmed{% else %}badge-cancelled{% endif %}">
+                        {{ ride.status }}
+                    </span>
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 500;">{{ ride.created_at|date:"D, d M Y" }}</span>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px;">
+                    <div style="font-size: 1.5rem;">🚕</div>
+                    <div style="flex: 1;">
+                        <p style="font-weight: 700; font-size: 1rem; margin-bottom: 4px;">{{ ride.pickup }}</p>
+                        <div style="width: 1px; height: 12px; border-left: 2px dotted var(--border); margin: 2px 0 2px 10px;"></div>
+                        <p style="font-weight: 700; font-size: 1rem; color: var(--text-muted);">{{ ride.drop_location }}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-weight: 800; font-size: 1.125rem; color: var(--primary);">₹{{ ride.estimated_fare }}</span>
+                    </div>
+                </div>
+
+                <div class="flex-between" style="padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        {% if ride.driver %}
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">👤</div>
+                            <span class="text-label" style="font-size: 0.75rem;">Captain: {{ ride.driver.username }}</span>
+                        {% else %}
+                            <span class="text-label" style="font-size: 0.75rem;">Looking for Captain...</span>
                         {% endif %}
-                    </p>
-
-                    {% if ride.driver %}
-                        <p>Driver: {{ ride.driver.username }}</p>
-                    {% else %}
-                        <p class="text-muted">
-                            Driver: Not assigned yet
-                        </p>
+                    </div>
+                    
+                    {% if ride.status == 'pending' or ride.status == 'confirmed' %}
+                        <a href="{% url 'ride_status' ride.id %}" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">
+                            Track Live 📡
+                        </a>
                     {% endif %}
-
-                    {% if ride.status == 'pending' %}
-                        <form method="POST"
-                              action="{% url 'cancel_ride' ride.id %}">
-                            {% csrf_token %}
-                            <button class="btn btn-danger btn-sm mt-2"
-                                    type="submit">
-                                Cancel Ride
-                            </button>
-                        </form>
-                    {% endif %}
-
                 </div>
             </div>
         {% empty %}
-            <div class="alert alert-info">
-                You have no bookings yet.
+            <div class="card" style="text-align: center; padding: 48px; border-style: dashed; background: transparent;">
+                <p style="color: var(--text-muted); margin-bottom: 16px;">No rides found in this category.</p>
+                <a href="{% url 'request_ride' %}" class="btn btn-primary">Book Your First Ride</a>
             </div>
         {% endfor %}
-
     </div>
 </div>
 {% endblock %}
