@@ -36,11 +36,14 @@ def request_ride(request):
             ride.passenger = request.user
             ride.status = 'pending'
             
-            # Mission: Production-Grade Simulation
+            # Mission: Production-Grade Fare Calculation
             import random
-            ride.estimated_fare = random.randint(120, 450)
             ride.pickup_distance = round(random.uniform(0.8, 4.2), 1)
             ride.travel_distance = round(random.uniform(3.5, 18.0), 1)
+            
+            # Fare mapping: Car => 20/km, Bike => 5/km
+            rate = 20 if ride.ride_type == 'car' else 5
+            ride.estimated_fare = round(ride.travel_distance * rate, 2)
             
             ride.save()
             

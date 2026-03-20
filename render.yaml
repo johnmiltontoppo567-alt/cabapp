@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cabapp
+    name: kokrajhar-cab
     plan: free
     runtime: python
     buildCommand: "./build.sh"
@@ -8,15 +8,25 @@ services:
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: cabapp-db
+          name: kokrajhar-cab-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: kokrajhar-cab-redis
+          type: redis
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: "False"
       - key: PYTHON_VERSION
-        value: "3.11.1"
+        value: "3.11.9"
 
 databases:
-  - name: cabapp-db
+  - name: kokrajhar-cab-db
     plan: free
+
+  - type: redis
+    name: kokrajhar-cab-redis
+    plan: free
+    maxmemoryPolicy: noeviction

@@ -144,9 +144,25 @@ LOGIN_REDIRECT_URL = 'ride_list'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL="login"
 
-# Channels Configuration - Use Redis in true Production!
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
+# Channels Configuration
+REDIS_URL = os.getenv("REDIS_URL")
+if REDIS_URL:
+    # Production: use Redis for real multi-process WebSocket support
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+else:
+    # Development: in-memory channel layer (single process only)
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
+
+# WhiteNoise compression for production static files
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

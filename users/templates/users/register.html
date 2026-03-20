@@ -1,35 +1,320 @@
 {% extends 'base.html' %}
-{% block title %}Register{% endblock %}
+{% load static %}
+
+{% block title %}Create Your Account — Join Kokrajhar Cab{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background: #020617;
+    }
+
+    .register-wrapper {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        padding: 80px 20px; /* More padding for scroll on mobile */
+        box-sizing: border-box;
+    }
+
+    /* Background Map */
+    #background-map {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        filter: brightness(0.3) blur(8px) saturate(0.5);
+    }
+
+    .map-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, transparent 0%, rgba(2, 6, 23, 0.8) 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* Register Card */
+    .register-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 28px;
+        padding: 40px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 20;
+    }
+
+    @keyframes cardAppear {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .brand-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .brand-logo {
+        font-size: 2.25rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .register-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 4px;
+    }
+
+    .register-subtitle {
+        color: #94A3B8;
+        font-size: 0.875rem;
+    }
+
+    /* Form Styling */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9375rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: #FBD304;
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow: 0 0 0 4px rgba(251, 211, 4, 0.1);
+    }
+
+    .form-select option {
+        background: #1E293B;
+        color: white;
+    }
+
+    .help-text {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-top: 4px;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 14px;
+        background: #FBD304;
+        color: #020617;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-top: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(251, 211, 4, 0.4);
+        filter: brightness(1.1);
+    }
+
+    .register-footer {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 0.875rem;
+        color: #94A3B8;
+    }
+
+    .register-footer a {
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        margin-left: 4px;
+        transition: 0.2s;
+    }
+
+    .register-footer a:hover {
+        color: #FBD304;
+        text-decoration: underline;
+    }
+
+    /* Error Styling */
+    .error-container {
+        margin-bottom: 20px;
+        background: rgba(239, 68, 68, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #EF4444;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    /* Override base container issues */
+    .page-container { padding-top: 0 !important; margin: 0 !important; max-width: 100% !important; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-body p-4">
-                <h3 class="card-title text-center mb-4">🚕 Join Kokrajhar Cab</h3>
+<div id="background-map"></div>
+<div class="map-overlay"></div>
 
-                {% if form.errors %}
-                    <div class="alert alert-danger">
-                        Please correct the errors below.
-                    </div>
-                {% endif %}
+<div class="register-wrapper">
+    <div class="register-card">
+        <div class="brand-header">
+            <span class="brand-logo">🚕</span>
+            <h1 class="register-title">Create Your Account</h1>
+            <p class="register-subtitle">Join Kokrajhar Cab and start booking rides</p>
+        </div>
 
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="d-grid mt-3">
-                        <button class="btn btn-success" 
-                                type="submit">Register</button>
-                    </div>
-                </form>
-
-                <p class="text-center mt-3">
-                    Already have an account?
-                    <a href="{% url 'login' %}">Login here</a>
-                </p>
-
+        {% if form.errors %}
+            <div class="error-container">
+                Please correct the errors below to continue.
             </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" 
+                           class="form-input" placeholder="Choose a username" required>
+                    {% if form.username.errors %}
+                        <div style="color: #EF4444; font-size: 0.75rem; margin-top: 4px;">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_email">Email Address</label>
+                    <input type="email" name="email" id="id_email" 
+                           class="form-input" placeholder="email@example.com" required>
+                    {% if form.email.errors %}
+                        <div style="color: #EF4444; font-size: 0.75rem; margin-top: 4px;">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_phone">Phone Number</label>
+                    <input type="text" name="phone" id="id_phone" 
+                           class="form-input" placeholder="10-digit number" required>
+                    {% if form.phone.errors %}
+                        <div style="color: #EF4444; font-size: 0.75rem; margin-top: 4px;">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_password1">Password</label>
+                    <input type="password" name="password1" id="id_password1" 
+                           class="form-input" placeholder="••••••••" required>
+                    <p class="help-text">At least 8 characters</p>
+                    {% if form.password1.errors %}
+                        <div style="color: #EF4444; font-size: 0.75rem; margin-top: 4px;">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_password2">Confirm Password</label>
+                    <input type="password" name="password2" id="id_password2" 
+                           class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_role">I am a...</label>
+                    <select name="role" id="id_role" class="form-select" required>
+                        <option value="passenger">Passenger looking for a ride</option>
+                        <option value="driver">Driver looking to earn</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register">Create Account</button>
+        </form>
+
+        <div class="register-footer">
+            Already have an account? 
+            <a href="{% url 'login' %}">Login</a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet for Background Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const map = L.map('background-map', {
+            center: [26.4011, 90.2667],
+            zoom: 15,
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let angle = 0;
+        const radius = 0.003;
+        const center = [26.4011, 90.2667];
+        
+        setInterval(() => {
+            angle += 0.0005;
+            const lat = center[0] + radius * Math.cos(angle);
+            const lng = center[1] + radius * Math.sin(angle);
+            map.panTo([lat, lng], { animate: true, duration: 3 });
+        }, 4000);
+    });
+</script>
 {% endblock %}

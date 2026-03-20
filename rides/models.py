@@ -10,8 +10,18 @@ class Ride(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
+    RIDE_TYPE_CHOICES = [
+        ('motorbike', 'Motorbike'),
+        ('car', 'Car'),
+    ]
+
     pickup = models.CharField(max_length=200)
     drop_location = models.CharField(max_length=200)
+    ride_type = models.CharField(
+        max_length=20,
+        choices=RIDE_TYPE_CHOICES,
+        default='car'
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

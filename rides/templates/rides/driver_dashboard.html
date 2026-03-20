@@ -1,201 +1,458 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Driver Command Center - Kokrajhar Cab{% endblock %}
+{% block title %}Driver Dashboard — Kokrajhar Cab{% endblock %}
 
 {% block extra_head %}
 <style>
+    body { background: #0F172A; }
+
+    /* ── Toast ── */
+    .toast-container {
+        position: fixed; top: 24px; right: 24px; z-index: 9999;
+    }
+    .toast {
+        background: #1E293B;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-left: 4px solid #22C55E;
+        color: white;
+        padding: 14px 20px; border-radius: 12px; font-size: 0.875rem;
+        min-width: 260px; display: flex; align-items: center; gap: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toastIn {
+        from { opacity: 0; transform: translateX(80px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    .toast-text b  { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #22C55E; }
+    .toast-text span { color: #94A3B8; }
+
+    /* ── Dashboard ── */
+    .dashboard-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 24px;
+    }
+
+    .dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+    }
+    .driver-title { font-size: 1.5rem; font-weight: 700; color: white; margin: 0; }
+    .driver-subtitle { color: #64748B; font-size: 0.875rem; margin: 4px 0 0; }
+
+    .online-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(34, 197, 94, 0.1); color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 6px 14px; border-radius: 99px;
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .online-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: #22C55E;
+        animation: blink 1.8s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    /* ── Two-Column Grid ── */
     .dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 60% 40%;
         gap: 24px;
-        max-width: 800px;
-        margin: 0 auto;
-        padding-bottom: 100px;
+        align-items: start;
     }
-    .feed-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 32px;
-        padding: 0 16px;
+
+    /* ── Section Labels ── */
+    .section-header { margin-bottom: 20px; }
+    .section-title {
+        font-size: 1.125rem; font-weight: 800; color: white; margin: 0 0 4px;
     }
+    .section-sub { color: #64748B; font-size: 0.8rem; }
+
+    /* ── Job Cards ── */
     .job-card {
+        background: #1E293B;
+        border: 1px solid rgba(251, 211, 4, 0.1);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 16px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
     }
-    .job-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px var(--elevated); }
-    
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin: 20px 0;
-        padding: 16px;
-        background: rgba(0,0,0,0.2);
+    .job-card::before {
+        content: '';
+        position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: linear-gradient(to bottom, #FBD304, #F59E0B);
+    }
+    .job-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+        border-color: rgba(251, 211, 4, 0.25);
+    }
+
+    .job-card-top {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    .job-meta { font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; }
+    .job-fare {
+        font-size: 2rem; font-weight: 900; color: #FBD304;
+        line-height: 1;
+    }
+    .job-fare-label { font-size: 0.6rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+
+    /* Route in Job Card */
+    .job-route {
+        margin-bottom: 20px;
+    }
+    .job-stop {
+        display: flex; align-items: center; gap: 12px; padding: 5px 0;
+    }
+    .stop-dot {
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .stop-dot.from { background: #FBD304; }
+    .stop-dot.to   { background: #475569; border: 2px solid #94A3B8; }
+    .job-connector {
+        width: 2px; height: 20px;
+        background: linear-gradient(to bottom, #FBD304, #475569);
+        margin-left: 4px;
+    }
+    .stop-name { font-weight: 700; color: white; font-size: 0.9375rem; }
+
+    /* Job Stats Strip */
+    .job-stats {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        background: rgba(15, 23, 42, 0.5);
         border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
     }
-    .stat-item { text-align: center; }
-    .stat-value { font-size: 1.125rem; font-weight: 800; color: var(--primary); display: block; }
-    .stat-label { font-size: 0.625rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
-
-    .route-visual {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
+    .job-stat {
+        padding: 12px;
+        text-align: center;
+        border-right: 1px solid rgba(255,255,255,0.05);
     }
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .line { flex: 1; height: 1px; border-bottom: 1px dashed var(--border); }
+    .job-stat:last-child { border-right: none; }
+    .job-stat-val { font-size: 1rem; font-weight: 800; color: white; display: block; }
+    .job-stat-lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #64748B; }
 
-    .accept-btn-production {
+    /* Accept Button */
+    .accept-btn {
         width: 100%;
-        padding: 20px;
-        font-size: 1.25rem;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        border-radius: 16px;
-        box-shadow: 0 8px 24px rgba(251, 211, 4, 0.2);
+        padding: 16px;
+        background: #FBD304; color: #020617;
+        border: none; border-radius: 14px;
+        font-size: 1rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1.5px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 16px rgba(251, 211, 4, 0.25);
+    }
+    .accept-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(251, 211, 4, 0.4);
+        filter: brightness(1.08);
+    }
+    .accept-btn:active { transform: scale(0.98); }
+
+    /* ── Ride History / Active Panel ── */
+    .rides-panel {
+        background: #1E293B;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        position: sticky; top: 24px;
     }
 
-    .filter-pills {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 24px;
-        overflow-x: auto;
-        padding: 4px;
+    /* Filter Tabs */
+    .filter-tabs {
+        display: flex; gap: 4px;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 10px; padding: 4px;
+        margin-bottom: 20px;
+    }
+    .filter-tab {
+        flex: 1; text-align: center;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 0.75rem; font-weight: 700;
+        color: #64748B;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .filter-tab.active, .filter-tab:hover {
+        background: #FBD304; color: #020617;
+    }
+
+    /* My Ride Cards */
+    .my-ride-card {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: 0.2s;
+    }
+    .my-ride-card:hover { border-color: rgba(251,211,4,0.15); }
+
+    .my-ride-top {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px;
+    }
+    .status-pill {
+        font-size: 0.65rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px;
+        padding: 4px 10px; border-radius: 99px;
+    }
+    .pill-confirmed { background: rgba(34,197,94,0.15); color: #22C55E; }
+    .pill-completed { background: rgba(251,211,4,0.12); color: #FBD304; }
+    .pill-pending   { background: rgba(99,102,241,0.12); color: #818CF8; }
+    .pill-cancelled { background: rgba(239,68,68,0.12); color: #EF4444; }
+
+    .my-ride-fare { font-size: 1.125rem; font-weight: 800; color: white; }
+    .passenger-name { font-weight: 700; color: white; font-size: 0.9375rem; }
+    .passenger-meta { color: #64748B; font-size: 0.75rem; margin-top: 2px; }
+    .passenger-phone {
+        display: inline-flex; align-items: center; gap: 5px;
+        color: #94A3B8; font-size: 0.75rem; text-decoration: none;
+        margin-top: 6px;
+    }
+    .passenger-phone:hover { color: #FBD304; }
+
+    .ride-route-mini {
+        font-size: 0.8rem; color: #64748B; margin-top: 8px;
+        display: flex; align-items: center; gap: 6px;
+    }
+
+    .complete-btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 11px;
+        background: transparent;
+        border: 2px solid rgba(251, 211, 4, 0.4);
+        color: #FBD304;
+        border-radius: 10px;
+        font-size: 0.8125rem; font-weight: 700;
+        cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+        transition: 0.2s;
+    }
+    .complete-btn:hover {
+        background: rgba(251,211,4,0.08);
+        border-color: #FBD304;
+        transform: translateY(-1px);
+    }
+
+    /* ── Empty State ── */
+    .empty-card {
+        background: rgba(15,23,42,0.4);
+        border: 2px dashed rgba(255,255,255,0.07);
+        border-radius: 20px;
+        padding: 48px 24px;
+        text-align: center;
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-title { color: white; font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .empty-sub { color: #64748B; font-size: 0.8125rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .rides-panel { position: static; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+
+{% if messages %}
+<div class="toast-container" id="toast-container">
+    {% for message in messages %}
+    <div class="toast">
+        <span style="font-size:1.2rem;">✅</span>
+        <div class="toast-text">
+            <b>Success</b>
+            <span>{{ message }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="dashboard-page">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1 class="driver-title">Driver Dashboard</h1>
+            <p class="driver-subtitle">{{ request.user.username|title }} • Ready to roll</p>
+        </div>
+        <div class="online-badge">
+            <span class="online-dot"></span> Online
+        </div>
+    </div>
+
     <div class="dashboard-grid">
-        <header class="feed-header">
-            <div>
-                <h1 class="title-lg" style="margin: 0;">Job Feed</h1>
-                <p class="text-label" style="font-size: 0.75rem;">Real-time opportunities nearby</p>
-            </div>
-            <div style="text-align: right;">
-                <span class="badge badge-confirmed" style="background: rgba(34, 197, 94, 0.1); color: var(--success);">Online</span>
-            </div>
-        </header>
 
-        <!-- Available Jobs Section -->
-        <section>
-            <div class="filter-pills">
-                <span class="text-label" style="align-self: center; margin-right: 8px;">Available</span>
+        <!-- ═══ LEFT: Job Feed ═══ -->
+        <div>
+            <div class="section-header">
+                <div class="section-title">📡 Job Feed</div>
+                <div class="section-sub">Real-time ride requests near you</div>
             </div>
-            
+
             {% for ride in pending_rides %}
-            <div class="card job-card mb-8" style="background: linear-gradient(145deg, #1E293B, #0F172A); border: 1px solid rgba(251, 211, 4, 0.1);">
-                <div class="flex-between">
-                    <span class="text-label" style="font-size: 0.65rem;">ID: #{{ ride.id }} • {{ ride.created_at|timesince }} ago</span>
-                    <span style="font-size: 1.125rem; font-weight: 800; color: var(--primary);">₹{{ ride.estimated_fare }}</span>
-                </div>
-
-                <div class="route-visual mt-4">
-                    <div class="dot" style="background: var(--primary);"></div>
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.9375rem; font-weight: 600; display: block;">{{ ride.pickup }}</span>
+            <div class="job-card">
+                <div class="job-card-top">
+                    <div>
+                        <div class="job-meta">Ride #{{ ride.id }} &nbsp;•&nbsp; {{ ride.created_at|timesince }} ago</div>
                     </div>
-                </div>
-                <div class="route-visual" style="margin-bottom: 0;">
-                    <div class="dot" style="background: var(--text-muted);"></div>
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.9375rem; font-weight: 600; display: block;">{{ ride.drop_location }}</span>
+                    <div style="text-align:right;">
+                        <div class="job-fare-label">Earnings</div>
+                        <div class="job-fare">₹{{ ride.estimated_fare }}</div>
                     </div>
                 </div>
 
-                <div class="stats-row">
-                    <div class="stat-item">
-                        <span class="stat-value">₹{{ ride.estimated_fare }}</span>
-                        <span class="stat-label">Earnings</span>
+                <div class="job-route">
+                    <div class="job-stop">
+                        <div class="stop-dot from"></div>
+                        <span class="stop-name">{{ ride.pickup }}</span>
                     </div>
-                    <div class="stat-item" style="border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
-                        <span class="stat-value">{{ ride.pickup_distance }}km</span>
-                        <span class="stat-label">To Pickup</span>
+                    <div class="job-connector" style="margin-left:4px;margin:4px 0 4px 4px;"></div>
+                    <div class="job-stop">
+                        <div class="stop-dot to"></div>
+                        <span class="stop-name">{{ ride.drop_location }}</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-value">{{ ride.travel_distance }}km</span>
-                        <span class="stat-label">Total Trip</span>
+                </div>
+
+                <div class="job-stats">
+                    <div class="job-stat">
+                        <span class="job-stat-val">₹{{ ride.estimated_fare }}</span>
+                        <span class="job-stat-lbl">Fare</span>
+                    </div>
+                    <div class="job-stat">
+                        <span class="job-stat-val">{{ ride.pickup_distance }} km</span>
+                        <span class="job-stat-lbl">To Pickup</span>
+                    </div>
+                    <div class="job-stat">
+                        <span class="job-stat-val">{{ ride.travel_distance }} km</span>
+                        <span class="job-stat-lbl">Trip Dist.</span>
                     </div>
                 </div>
 
                 <form method="POST" action="{% url 'accept_ride' ride.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary accept-btn-production">
-                        Accept Job
-                    </button>
+                    <button type="submit" class="accept-btn">Accept Job →</button>
                 </form>
             </div>
             {% empty %}
-            <div class="card" style="text-align: center; border-style: dashed; background: transparent; opacity: 0.5;">
-                <p>Waiting for new requests... 📡</p>
-                <div class="shimmer" style="height: 2px; width: 60px; margin: 12px auto; border-radius: 2px;"></div>
+            <div class="empty-card">
+                <div class="empty-icon">📡</div>
+                <div class="empty-title">No ride requests right now</div>
+                <div class="empty-sub">New jobs will appear here automatically when passengers request a ride</div>
             </div>
             {% endfor %}
-        </section>
+        </div>
 
-        <!-- Active/History Section -->
-        <section class="mt-4">
-            <h2 class="title-lg mb-8">My Active Rides</h2>
-            
-            <div class="filter-pills">
-                <a href="{% url 'driver_dashboard' %}" class="btn {% if not status_filter %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">All</a>
-                <a href="{% url 'driver_dashboard' %}?status=confirmed" class="btn {% if status_filter == 'confirmed' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">Active</a>
-                <a href="{% url 'driver_dashboard' %}?status=completed" class="btn {% if status_filter == 'completed' %}btn-secondary{% else %}btn-outline{% endif %}" style="padding: 6px 16px; font-size: 0.75rem;">History</a>
+        <!-- ═══ RIGHT: My Rides ═══ -->
+        <div class="rides-panel">
+            <div class="section-header">
+                <div class="section-title">My Rides</div>
+                <div class="section-sub">Active and completed trips</div>
+            </div>
+
+            <div class="filter-tabs">
+                <a href="{% url 'driver_dashboard' %}"
+                   class="filter-tab {% if not status_filter %}active{% endif %}">All</a>
+                <a href="{% url 'driver_dashboard' %}?status=confirmed"
+                   class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Active</a>
+                <a href="{% url 'driver_dashboard' %}?status=completed"
+                   class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">Done</a>
             </div>
 
             {% for ride in accepted_rides %}
-            <div class="card mb-4" style="padding: 20px;">
-                <div class="flex-between mb-8">
-                    <span class="badge {% if ride.status == 'confirmed' %}badge-confirmed{% else %}badge-pending{% endif %}">
-                        {{ ride.status }}
+            <div class="my-ride-card">
+                <div class="my-ride-top">
+                    <span class="status-pill
+                        {% if ride.status == 'confirmed' %}pill-confirmed
+                        {% elif ride.status == 'completed' %}pill-completed
+                        {% elif ride.status == 'pending' %}pill-pending
+                        {% else %}pill-cancelled{% endif %}">
+                        {{ ride.get_status_display }}
                     </span>
-                    <span style="font-weight: 700;">₹{{ ride.estimated_fare }}</span>
+                    <span class="my-ride-fare">₹{{ ride.estimated_fare }}</span>
                 </div>
-                
-                <p style="font-weight: 600; margin-bottom: 4px;">{{ ride.passenger.username }}</p>
-                <p class="text-label" style="font-size: 0.75rem; margin-bottom: 16px;">
-                    {% if ride.passenger.userprofile.phone %}📞 {{ ride.passenger.userprofile.phone }}{% else %}No phone added{% endif %}
-                </p>
+
+                <div class="passenger-name">{{ ride.passenger.username|title }}</div>
+                {% if ride.passenger.userprofile.phone %}
+                <a href="tel:{{ ride.passenger.userprofile.phone }}" class="passenger-phone">
+                    📞 {{ ride.passenger.userprofile.phone }}
+                </a>
+                {% else %}
+                <span class="passenger-meta">No phone on file</span>
+                {% endif %}
+
+                <div class="ride-route-mini">
+                    <span>📍 {{ ride.pickup }}</span>
+                    <span style="color:#334155;">→</span>
+                    <span>🏁 {{ ride.drop_location }}</span>
+                </div>
 
                 {% if ride.status == 'confirmed' %}
                 <form method="POST" action="{% url 'complete_ride' ride.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary);">
-                        Mark as Completed
-                    </button>
+                    <button type="submit" class="complete-btn">✓ Mark Completed</button>
                 </form>
                 {% else %}
-                <div class="flex-between">
-                    <span class="text-label">Completed on {{ ride.updated_at|date:"d M, h:i A" }}</span>
-                    <span style="color: var(--success);">✓</span>
+                <div style="margin-top:10px;font-size:0.75rem;color:#475569;">
+                    Completed {{ ride.updated_at|date:"d M • h:i A" }}
                 </div>
                 {% endif %}
             </div>
+            {% empty %}
+            <div class="empty-card" style="padding:32px 20px;">
+                <div class="empty-icon">🚗</div>
+                <div class="empty-title">No rides yet</div>
+                <div class="empty-sub">Accept a job from the feed to get started</div>
+            </div>
             {% endfor %}
-        </section>
+        </div>
+
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const socket = new WebSocket(
-        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
-        window.location.host + '/ws/drivers/'
-    );
+document.addEventListener('DOMContentLoaded', () => {
+    // Auto-dismiss toast
+    const toastContainer = document.getElementById('toast-container');
+    if (toastContainer) {
+        setTimeout(() => {
+            toastContainer.style.transition = 'opacity 0.5s';
+            toastContainer.style.opacity = '0';
+            setTimeout(() => toastContainer.remove(), 500);
+        }, 4500);
+    }
+
+    // WebSocket for real-time job updates
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(wsProtocol + window.location.host + '/ws/drivers/');
 
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'ride_available') {
-            // Toast or reload
-            console.log("New ride available!");
-            window.location.reload();
+            // Flash the job feed header and reload to show the new job
+            document.querySelector('.section-title').style.color = '#FBD304';
+            setTimeout(() => window.location.reload(), 800);
         }
     };
+});
 </script>
 {% endblock %}

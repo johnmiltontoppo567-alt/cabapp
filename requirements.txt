@@ -13,6 +13,7 @@ daphne>=4.1.0
 
 # WebSockets and Async
 channels>=4.0.0
+channels-redis>=4.2.0
 
 # Static File Serving
 whitenoise>=6.6.0

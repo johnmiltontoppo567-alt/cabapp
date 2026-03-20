@@ -4,7 +4,7 @@ from .models import Ride
 class RideRequestForm(forms.ModelForm):
     class Meta:
         model = Ride
-        fields = ['pickup', 'drop_location']
+        fields = ['pickup', 'drop_location', 'ride_type']
 
     def clean_pickup(self):
         pickup = self.cleaned_data.get('pickup')
