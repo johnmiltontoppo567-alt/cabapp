@@ -1,6 +1,7 @@
 services:
   - type: web
     name: cabapp
+    plan: free
     runtime: python
     buildCommand: "./build.sh"
     startCommand: "daphne cabapp.asgi:application --port $PORT --bind 0.0.0.0"
