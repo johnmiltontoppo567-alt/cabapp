@@ -6,20 +6,41 @@ from django.contrib.auth.decorators import login_required
 
 def register_view(request):
     if request.method == 'POST':
-        form = RegisterForm(request.POST)
+        # Accept FILES for documents
+        form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
+            # Don't save to db immediately so we can conditionally set is_active
+            user = form.save(commit=False)
+            role = form.cleaned_data.get('role')
+            
+            if role == 'driver':
+                user.is_active = False  # Pending manual admin approval
+            
+            user.save()
+            
+            # Create UserProfile with extra driver files
             UserProfile.objects.create(
                 user=user,
-                role=form.cleaned_data.get('role'),
-                phone=form.cleaned_data.get('phone')
+                role=role,
+                phone=form.cleaned_data.get('phone'),
+                vehicle_number=request.POST.get('vehicle_number'),
+                driving_license_no=request.POST.get('driving_license_no'),
+                rc_number=request.POST.get('rc_number'),
+                license_upload=request.FILES.get('license_upload'),
+                rc_upload=request.FILES.get('rc_upload'),
             )
-            messages.success(request,
-                f"Welcome {user.username}! Please login.")
-            return redirect('login')
+            
+            if role == 'driver':
+                return redirect('pending_approval')
+            else:
+                messages.success(request, f"Welcome {user.username}! Please login.")
+                return redirect('login')
     else:
         form = RegisterForm()
     return render(request, 'users/register.html', {'form': form})
+
+def pending_approval_view(request):
+    return render(request, 'users/pending_approval.html')
 
 @login_required
 def profile_view(request):

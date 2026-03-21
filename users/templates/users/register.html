@@ -218,7 +218,7 @@
             </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             
             <div class="form-grid">
@@ -274,6 +274,36 @@
                 </div>
             </div>
 
+            <!-- Conditional Driver Fields -->
+            <div id="driver-fields-container" style="display: none; margin-top: 24px;">
+                <div class="error-container" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60A5FA; margin-bottom: 24px;">
+                    ℹ️ <strong>Note:</strong> Driver accounts require manual verification by our team before activation. You will not be able to log in until your documents are reviewed.
+                </div>
+                
+                <h3 style="color: white; font-size: 1.1rem; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">Vehicle & Documents</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="id_vehicle_number">Vehicle Plate Number</label>
+                        <input type="text" name="vehicle_number" id="id_vehicle_number" class="form-input" placeholder="e.g. AS-01-XX-1234">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="id_driving_license_no">Driving License Number</label>
+                        <input type="text" name="driving_license_no" id="id_driving_license_no" class="form-input" placeholder="Enter License Number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="id_license_upload">Upload Driving License (Image/PDF)</label>
+                        <input type="file" name="license_upload" id="id_license_upload" class="form-input" accept="image/*,.pdf" style="padding: 10px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="id_rc_upload">Upload RC Document (Image/PDF)</label>
+                        <input type="file" name="rc_upload" id="id_rc_upload" class="form-input" accept="image/*,.pdf" style="padding: 10px;">
+                    </div>
+                </div>
+            </div>
+
             <button type="submit" class="btn-register">Create Account</button>
         </form>
 
@@ -292,6 +322,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Map Setup
         const map = L.map('background-map', {
             center: [26.4011, 90.2667],
             zoom: 15,
@@ -315,6 +346,33 @@
             const lng = center[1] + radius * Math.sin(angle);
             map.panTo([lat, lng], { animate: true, duration: 3 });
         }, 4000);
+
+        // Driver Fields Toggle Logic
+        const roleSelect = document.getElementById('id_role');
+        const driverContainer = document.getElementById('driver-fields-container');
+        const driverInputs = driverContainer.querySelectorAll('input');
+
+        function toggleDriverFields() {
+            if (roleSelect.value === 'driver') {
+                driverContainer.style.display = 'block';
+                // Make driver inputs required
+                driverInputs.forEach(input => {
+                    input.required = true;
+                });
+            } else {
+                driverContainer.style.display = 'none';
+                // Remove required attribute
+                driverInputs.forEach(input => {
+                    input.required = false;
+                    // Optionally clear values if switching back
+                    if (input.type === 'file') { input.value = ''; }
+                });
+            }
+        }
+
+        // Run on load and on change
+        toggleDriverFields();
+        roleSelect.addEventListener('change', toggleDriverFields);
     });
 </script>
 {% endblock %}

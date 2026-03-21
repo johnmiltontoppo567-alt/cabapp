@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account Pending Approval{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center" style="margin-top: 100px;">
+        <div style="font-size: 5rem; margin-bottom: 20px;">⏳</div>
+        <h2 style="color: white; font-family: 'Poppins', sans-serif;">Setup Under Review</h2>
+        <p style="color: #94A3B8; font-size: 1.1rem; line-height: 1.6; margin-top: 20px;">
+            Thank you for applying to drive with Kokrajhar Cab! <br><br>
+            Your documents and vehicle details have been successfully uploaded and are currently under <strong>manual review</strong> by our administration team.
+        </p>
+        <div style="background: rgba(251, 211, 4, 0.1); border: 1px solid rgba(251, 211, 4, 0.3); padding: 20px; border-radius: 12px; margin-top: 30px;">
+            <p style="color: #FBD304; margin: 0; font-weight: 500;">
+                You will be notified as soon as your account is approved and activated. Once activated, you will be able to log in to your Driver Dashboard.
+            </p>
+        </div>
+        
+        <a href="{% url 'home' %}" class="btn btn-secondary" style="margin-top: 40px; border-radius: 12px; padding: 12px 24px;">Return to Home</a>
+    </div>
+</div>
+{% endblock %}

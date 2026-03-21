@@ -5,6 +5,7 @@ from .forms import RideRequestForm
 from django.contrib import messages
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from users.decorators import driver_required
 
 @login_required
 def ride_list(request):
@@ -69,9 +70,8 @@ def request_ride(request):
     return render(request, 'rides/request_ride.html', context)
 
 @login_required
+@driver_required
 def driver_dashboard(request):
-    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
-        return redirect('ride_list') if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'passenger' else redirect('admin:index')
     pending_rides = Ride.objects.select_related(
         'passenger'
     ).filter(status='pending')
@@ -92,9 +92,8 @@ def driver_dashboard(request):
     return render(request, 'rides/driver_dashboard.html', context)
 
 @login_required
+@driver_required
 def accept_ride(request, ride_id):
-    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
-        return redirect('home')
     if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'pending':
@@ -120,9 +119,8 @@ def accept_ride(request, ride_id):
     return redirect('driver_dashboard')
 
 @login_required
+@driver_required
 def complete_ride(request, ride_id):
-    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
-        return redirect('home')
     if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'confirmed' and ride.driver == request.user:
