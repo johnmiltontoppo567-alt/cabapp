@@ -23,11 +23,15 @@ def register_view(request):
 
 @login_required
 def profile_view(request):
+    if not hasattr(request.user, 'userprofile'):
+        return redirect('admin:index')
     profile = request.user.userprofile
     return render(request, 'users/profile.html', {'profile': profile})
 
 @login_required
 def edit_profile_view(request):
+    if not hasattr(request.user, 'userprofile'):
+        return redirect('admin:index')
     profile = request.user.userprofile
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, instance=profile)

@@ -8,8 +8,8 @@ from channels.layers import get_channel_layer
 
 @login_required
 def ride_list(request):
-    if request.user.userprofile.role != 'passenger':
-        return redirect('driver_dashboard')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'passenger':
+        return redirect('driver_dashboard') if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'driver' else redirect('admin:index')
     status_filter = request.GET.get('status', '')
     if status_filter:
         rides = Ride.objects.select_related(
@@ -27,8 +27,8 @@ def ride_list(request):
 
 @login_required
 def request_ride(request):
-    if request.user.userprofile.role != 'passenger':
-        return redirect('driver_dashboard')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'passenger':
+        return redirect('driver_dashboard') if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'driver' else redirect('admin:index')
     if request.method == 'POST':
         form = RideRequestForm(request.POST)
         if form.is_valid():
@@ -70,8 +70,8 @@ def request_ride(request):
 
 @login_required
 def driver_dashboard(request):
-    if request.user.userprofile.role != 'driver':
-        return redirect('ride_list')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
+        return redirect('ride_list') if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'passenger' else redirect('admin:index')
     pending_rides = Ride.objects.select_related(
         'passenger'
     ).filter(status='pending')
@@ -93,8 +93,8 @@ def driver_dashboard(request):
 
 @login_required
 def accept_ride(request, ride_id):
-    if request.user.userprofile.role != 'driver':
-        return redirect('ride_list')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
+        return redirect('home')
     if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'pending':
@@ -121,8 +121,8 @@ def accept_ride(request, ride_id):
 
 @login_required
 def complete_ride(request, ride_id):
-    if request.user.userprofile.role != 'driver':
-        return redirect('ride_list')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'driver':
+        return redirect('home')
     if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'confirmed' and ride.driver == request.user:
@@ -145,8 +145,8 @@ def complete_ride(request, ride_id):
 
 @login_required
 def cancel_ride(request, ride_id):
-    if request.user.userprofile.role != 'passenger':
-        return redirect('driver_dashboard')
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'passenger':
+        return redirect('home')
     if request.method == 'POST':
         ride = get_object_or_404(Ride, id=ride_id)
         if ride.status == 'pending' and ride.passenger == request.user:
@@ -161,16 +161,22 @@ def cancel_ride(request, ride_id):
 
 def home(request):
     if request.user.is_authenticated:
-        if request.user.userprofile.role == 'driver':
-            return redirect('driver_dashboard')
-        return redirect('ride_list')
+        # Check if user has a profile (superusers might not)
+        if hasattr(request.user, 'userprofile'):
+            if request.user.userprofile.role == 'driver':
+                return redirect('driver_dashboard')
+            return redirect('ride_list')
+        else:
+            # Superuser without profile can just be redirected to admin or log out
+            return redirect('admin:index')
     return render(request, 'rides/home.html')
 
 @login_required
 def ride_status(request, ride_id):
     ride = get_object_or_404(Ride, id=ride_id)
     # Security: Only passenger or driver can see status
-    if request.user != ride.passenger and request.user.userprofile.role != 'driver':
+    has_profile = hasattr(request.user, 'userprofile')
+    if request.user != ride.passenger and (not has_profile or request.user.userprofile.role != 'driver'):
         # If it's the personal ride of the passenger, or the driver who accepted it
         if ride.driver and request.user != ride.driver:
              return redirect('ride_list')
