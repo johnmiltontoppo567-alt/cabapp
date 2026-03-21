@@ -410,6 +410,8 @@
                     <div class="driver-meta">
                         {{ ride.driver.userprofile.vehicle_model|default:"Standard Vehicle" }} •
                         <span style="color:#FBD304;">{{ ride.driver.userprofile.license_plate|default:"AS-00-0000" }}</span>
+                        <br>
+                        📞 <a href="tel:{{ ride.driver.userprofile.phone }}" style="color:#22C55E; text-decoration:none;">{{ ride.driver.userprofile.phone|default:"Not provided" }}</a>
                     </div>
                 </div>
             </div>

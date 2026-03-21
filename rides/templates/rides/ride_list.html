@@ -276,10 +276,15 @@
                             <span class="driver-name">
                                 {% if ride.driver %}
                                     Captain {{ ride.driver.username }}
+                                </span>
+                                <span class="driver-detail" style="font-size: 0.75rem; color: #64748B; display: block; margin-top: 2px;">
+                                    📞 {{ ride.driver.userprofile.phone|default:"N/A" }} &nbsp;•&nbsp;
+                                    🚘 {{ ride.driver.userprofile.license_plate|default:"N/A" }}
+                                </span>
                                 {% else %}
                                     Finding your Captain...
+                                </span>
                                 {% endif %}
-                            </span>
                         </div>
                     </div>
                     

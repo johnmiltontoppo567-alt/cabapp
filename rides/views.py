@@ -13,11 +13,11 @@ def ride_list(request):
     status_filter = request.GET.get('status', '')
     if status_filter:
         rides = Ride.objects.select_related(
-            'passenger', 'driver'
+            'passenger', 'driver', 'driver__userprofile'
         ).filter(passenger=request.user, status=status_filter)
     else:
         rides = Ride.objects.select_related(
-            'passenger', 'driver'
+            'passenger', 'driver', 'driver__userprofile'
         ).filter(passenger=request.user)
     context = {
         'rides': rides,
