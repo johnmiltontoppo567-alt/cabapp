@@ -168,5 +168,14 @@ else:
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if os.getenv('EMAIL_HOST_USER'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = f"Kokrajhar Cab <{EMAIL_HOST_USER}>"
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
